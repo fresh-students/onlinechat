@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .login{
+            width:300px;
+            height:auto;
+            padding: 1rem;
+            margin: 100px auto 0;
+            box-shadow: rgba(0, 0, 0, 0.5) 0 0 20px 5px;
+            
+        }
+        .user{
+            width:100%;
+            outline: none;
+            border:1px solid #cfcfcf;
+            line-height: 35px;
+            margin-bottom: 20px;
+        }
+        .login h4{
+            font-size: 14px;
+            color: #666;
+            text-align: center;
+        }
+        #loginin{
+            width: 100%;
+            line-height: 40px;
+            border: 1px solid #cfcfcf;
+            cursor: pointer;
+            color:#666
+        }
+        #loginin:hover{
+            background-color: rgba(0, 0, 0, 0.5);
+            color:#fff
+        }
+    </style>
+</head>
+<body>
+    <div class="login">
+        <h4>登录</h4>
+        <input type="text" id="username" class="user"  placeholder="聊天昵称">
+        <!-- <input type="password" id="userpwd" class="user"> -->
+        <button id="loginin">进入聊天</button>
+    </div>
+</body>
+<script>
+    let username = document.getElementById("username")
+    let password = document.getElementById("userpwd")
+    let loginBtn = document.getElementById("loginin")
+    // 进入聊天室点击事件
+    loginBtn.onclick = function(){
+        // 判断localstroage中是否有同一个名字
+        isExistInStorage(username.value)
+    }
+    function isExistInStorage(val){
+        if(localStorage.getItem('username')==val){
+            alert("用户已存在")
+            username.value=''
+        }else{
+            console.log("可以使用")
+            // localStroage中没有则添加
+            localStorage.setItem('username',val)
+            // 这里发送ajax请求
+            // 只有当访问后端提供的端口，后端才能获取username参数值
+            let url = 'http://localhost:3000/?username='+val
+            ajax(url).then(res=>{
+                // 端口访问正确，后端已拿到username，这个username用来渲染提示信息的名字
+                if(res.state==200){
+                    // 跳转页面
+                    window.location.href="/?username="+val 
+                }
+            })
+        }
+    }
+    // 封装的ajax请求
+    function ajax(url){
+        return new Promise((resolve,reject)=>{
+            let xhr = new XMLHttpRequest()
+            xhr.open("GET",url)
+            xhr.onreadystatechange = handler;
+            xhr.responseType = 'json'
+            xhr.setRequestHeader('Accept','application/json')
+            xhr.send()
+            function handler(){
+                if(this.readyState!==4) return;
+                if(this.status ===200){
+                    resolve(this.response)
+                    return
+                }else{
+                    reject(new Error("can't load this asset"))
+                    return
+                }
+            }
+        })
+    }
+</script>
+</html>

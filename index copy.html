@@ -1,0 +1,125 @@
+<!doctype html>
+<html>
+
+<head>
+  <title>Socket.IO chat</title>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    .chat {
+      width: 400px;
+      margin: 0 auto;
+      border: 1px solid #333;
+    }
+
+    .title {
+      line-height: 30px;
+      color: black;
+      border-bottom: 1px solid #999;
+      text-align: center;
+    }
+
+    .content {
+      width: 100%;
+      overflow: auto;
+      height: 500px;
+    }
+
+    #messages li {
+      list-style: none;
+      padding: 5px;
+    }
+
+    #m {
+      width: 80%;
+      height: 30px;
+      outline: none;
+      color: #666
+    }
+
+    #btn {
+      width: 20%;
+      height: 30px;
+      cursor: pointer;
+    }
+
+    .tips {
+      width: 50%;
+      margin: 4px auto;
+      padding: 2px 5px;
+      text-align: center;
+      font-size: 8px;
+      border-radius: 10px;
+      background-color: #cfcfcf;
+      color: #fff
+    }
+
+    .title #people {
+      font-size: 8px;
+      color: #999;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="chat">
+    <div class="title">
+      <h3>聊天室<span id="people">(0)</span></h3>
+    </div>
+    <div class="content">
+      <ul id="messages">
+      </ul>
+    </div>
+    <input id="m" autocomplete="off" /><button id="btn">Send</button>
+  </div>
+</body>
+<script src="./static/dist/socket.io.js"></script>
+<script>
+  var test = window.location.href;
+  var username = test.split("?username=")[1];
+  if (localStorage.getItem('username') != '') {
+    var socket = io('http://localhost:3000/')
+    var btn = document.getElementById('btn')
+    var ul = document.getElementById('messages')
+    let cxt = document.getElementById('m')
+    let people = document.getElementById('people')
+    btn.onclick = function () {
+      socket.emit('message', cxt.value)
+      return false
+    }
+    //监听发送消息
+    socket.on('message', function (msg) {
+      // console.log(msg)
+      var newli = document.createElement("li")
+      newli.innerHTML = username + ':' + msg.msg
+      ul.appendChild(newli)
+      cxt.value = ''
+    })
+    // 监听加入
+    socket.on("loginin", function (msg) {
+      let tip = document.createElement("p")
+      tip.innerHTML = msg.des
+      tip.className = "tips"
+      ul.appendChild(tip)
+      people.innerHTML = '(' + msg.count + ')'
+    })
+    //监听退出
+    socket.on("loginout", function (msg) {
+      let tip = document.createElement("p")
+      tip.innerHTML = msg.des
+      tip.className = "tips"
+      ul.appendChild(tip)
+      people.innerHTML = '(' + msg.count + ')'
+    })
+  } else {
+    window.location.href = "/login.html"
+  }
+
+</script>
+
+</html>

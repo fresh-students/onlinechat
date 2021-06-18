@@ -1,0 +1,133 @@
+<!doctype html>
+<html>
+
+<head>
+  <title>Socket.IO chat</title>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    .chat {
+      width: 400px;
+      margin: 0 auto;
+      border: 1px solid #333;
+    }
+
+    .title {
+      line-height: 30px;
+      color: black;
+      border-bottom: 1px solid #999;
+      text-align: center;
+    }
+
+    .content {
+      width: 100%;
+      overflow: auto;
+      height: 500px;
+    }
+
+    #messages li {
+      list-style: none;
+      padding: 5px;
+    }
+
+    #m {
+      width: 80%;
+      height: 30px;
+      outline: none;
+      color: #666
+    }
+
+    #btn {
+      width: 20%;
+      height: 30px;
+      cursor: pointer;
+    }
+
+    .tips {
+      width: 50%;
+      margin: 4px auto;
+      padding: 2px 5px;
+      text-align: center;
+      font-size: 8px;
+      border-radius: 10px;
+      background-color: #cfcfcf;
+      color: #fff
+    }
+
+    .title #people {
+      font-size: 8px;
+      color: #999;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="chat">
+    <div class="title">
+      <h3>聊天室<span id="people">(0)</span></h3>
+    </div>
+    <div class="content">
+      <ul id="messages">
+      </ul>
+    </div>
+    <input id="m" autocomplete="off" /><button id="btn">Send</button>
+  </div>
+</body>
+<script src="./static/dist/socket.io.js"></script>
+<script>
+  // 通过url获取username
+  var test = window.location.href;
+  var username = decodeURI(test.split("?username=")[1]);
+  // 做个判断
+  if (localStorage.getItem('username') != '') {
+    var socket = io('http://localhost:3000/')
+    var btn = document.getElementById('btn')
+    var ul = document.getElementById('messages')
+    let cxt = document.getElementById('m')
+    let people = document.getElementById('people')
+    // 点击send按钮，把消息发送给服务器
+    btn.onclick = function () {
+      // 把登录的用户名和输入框内容全部发送给服务器，让服务器做一次广播，才能同步用户信息。
+      socket.emit('message', { username, inpval: cxt.value })
+      return false
+    }
+    //监听服务器的广播消息，同步用户信息，msg就是点击发送按钮发送的用户信息
+    socket.on('message', function (msg) {
+      // 每个客户端将用户的消息渲染
+      var newli = document.createElement("li")
+      newli.innerHTML = msg.username + ':' + msg.inpval
+      ul.appendChild(newli)
+      cxt.value = ''
+    })
+    // 服务器端监听服务端建立连接发来的信息，用于渲染温馨提示信息，msg是服务器返回广播的用户对象数据
+    socket.on("loginin", function (msg) {
+      // 生成用户进入房间提示信息标签
+      let tip = document.createElement("p")
+      tip.innerHTML = msg.des
+      // 设置样式
+      tip.className = "tips"
+      ul.appendChild(tip)
+      // people是显示当前聊天室人数
+      people.innerHTML = '(' + msg.count + ')'
+    })
+    //服务器端监听服务端建立连接发来的信息,msg是服务器返回广播的用户对象数据
+    socket.on("loginout", function (msg) {
+      // 生成用户退出提示信息
+      let tip = document.createElement("p")
+      tip.innerHTML = msg.des
+      tip.className = "tips"
+      ul.appendChild(tip)
+      people.innerHTML = '(' + msg.count + ')'
+    })
+  } else {
+    window.location.href = "/login.html"
+  }
+
+</script>
+
+</html>
